@@ -1,0 +1,45 @@
+{
+  "_comment": "Pixel 3 + Bangcle-packed Metronome v2.1.1 (versionCode 26). Sibling of metronome_bangcle_pixel9.json; same APK (it has all 4 ABIs: arm64-v8a + armeabi-v7a + x86 + x86_64). Pixel 3 selects armeabi-v7a or arm64-v8a at install time (both are supported on Android 12). Used to verify cross-device compatibility of the same packed binary AND to smoke-test the Compose testTag fallback patch in _lib/scoring.py (post-2026-05-12). Float-charge masking applies to Pixel 3 as well — energy column will be tagged energy_invalid_usb_supplying / energy_invalid_charge_dominant until Epic 1.6 hub-ctrl is in place.",
+  "type": "native",
+  "adb_path": "/home/irena/Android/Sdk/platform-tools/adb",
+  "devices": {
+    "Pixel 3": {}
+  },
+  "repetitions": 1,
+  "interaction_covers_duration": true,
+  "paths": [
+    "/home/irena/Documents/Master Thesis/APKs/com.bobek.metronome_26_protected-v2.1.1.signed.apk"
+  ],
+  "application_id": "com.bobek.metronome",
+  "duration": 120000,
+  "profilers": {
+    "batterymanager": {
+      "experiment_aggregation": "default",
+      "sample_interval": 100,
+      "data_points": [
+        "BATTERY_PROPERTY_CURRENT_NOW",
+        "EXTRA_VOLTAGE"
+      ],
+      "persistency_strategy": [
+        "adb_log"
+      ]
+    },
+    "android": {
+      "sample_interval": 1000,
+      "data_points": [
+        "cpu",
+        "mem"
+      ]
+    }
+  },
+  "scripts": {
+    "before_experiment": "Scripts/before_experiment_uninstall_metronome.py",
+    "before_run": "Scripts/before_run.py",
+    "after_launch": "Scripts/after_launch.py",
+    "interaction": "Scripts/interaction_appium_metronome_espresso_mirror.py",
+    "before_close": "Scripts/before_close.py",
+    "after_run": "Scripts/after_run.py",
+    "after_experiment": "Scripts/after_experiment.py"
+  },
+  "time_between_run": 5000
+}
