@@ -1,0 +1,6 @@
+{
+  "readme": "Edit these paths, then copy each value into the matching experiment JSON under \"paths\", or keep paths in the monkey_* JSON files in sync manually.",
+  "baseline_apk": "/CHANGE_ME/path/to/app-debug.apk",
+  "obfuscated_apk": "/CHANGE_ME/path/to/obfuscated-metronome.apk",
+  "packed_apk": "/home/irena/Documents/Master Thesis/APKs/app-protected-signed.apk"
+}
