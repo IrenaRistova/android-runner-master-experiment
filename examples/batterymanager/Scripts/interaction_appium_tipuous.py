@@ -25,6 +25,13 @@ _WORKSPACE_ROOT = os.path.abspath(os.path.join(_HERE, *([os.pardir] * 4)))
 if _WORKSPACE_ROOT not in sys.path:
     sys.path.insert(0, _WORKSPACE_ROOT)
 
+# Tag this run as the tipuous app so after_experiment.py's tracking-matrix
+# updater records `app=tipuous` (not the legacy default `metronome`). Uses
+# setdefault so an explicit caller-set APPIUM_APP still wins. Belt-and-
+# suspenders against the after_experiment.py fallback chain (which also
+# infers the app from the APK-basename slug — see post-2026-05-12 fix).
+os.environ.setdefault("APPIUM_APP", "tipuous")
+
 
 def main(device, *args, **kwargs):
     from appium_android_tests import tipuous
