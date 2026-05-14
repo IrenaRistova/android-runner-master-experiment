@@ -115,6 +115,58 @@ def _normalize_device(name_or_id):
     return key or "unknown"
 
 
+# Known per-app slugs registered under appium_android_tests/<slug>/ (as of 2026-05-12).
+# When new per-app modules land, add their slugs here so app-inference from the APK
+# basename works out of the box. Order doesn't matter (no aliasing — slugs are exact).
+_KNOWN_APP_SLUGS = (
+    "metronome", "tipuous", "documenter", "linkhub", "repertoire",
+    "calculator", "iamspeed", "poetskingdom", "keeprecipe", "anothernotes",
+    "itsok", "dayswithoutbadhabits", "pdfviewer",
+)
+
+
+def _infer_app_from_run_output(run_output_dir):
+    """Infer app slug from the per-(device, subject) folder name under data/.
+
+    AndroidRunner names that folder by slugifying the APK path. Examples:
+      - .../tipuous_protected.signed.apk → ...apks-tipuous_protected-signed-apk
+      - .../com.bobek.metronome_26_protected-v2.1.1.signed.apk →
+        ...apks-com-bobek-metronome_26_protected-v2-1-1-signed-apk
+      - .../documenter-universal-debug_protected.signed.apk →
+        ...apks-documenter-universal-debug_protected-signed-apk
+      - .../Linkhub_protected.signed.apk → ...apks-linkhub_protected-signed-apk
+    We scan the slug for any token in `_KNOWN_APP_SLUGS`. Returns None if the
+    slug is unhelpful — caller should fall back to APPIUM_APP env or "unknown"
+    (NOT to "metronome", which is just the pilot app, not a sensible default).
+
+    Companion to `_infer_variant_from_run_output` and uses the same walk shape.
+    """
+    if not run_output_dir:
+        return None
+    data_dir = op.join(run_output_dir, "data")
+    if not op.isdir(data_dir):
+        return None
+    try:
+        for device_name in os.listdir(data_dir):
+            device_path = op.join(data_dir, device_name)
+            if not op.isdir(device_path):
+                continue
+            for subject_slug in os.listdir(device_path):
+                if not op.isdir(op.join(device_path, subject_slug)):
+                    continue
+                slug = re.sub(r"[^a-z0-9]+", "", subject_slug.lower())
+                # Order matters slightly: longer slugs first so e.g.
+                # "linkhub" wins over a hypothetical "link" subset, and
+                # "metronome" matches the v2.1.1-suffixed APK basename
+                # `com-bobek-metronome_26_protected-v2-1-1-signed-apk`.
+                for app_slug in sorted(_KNOWN_APP_SLUGS, key=len, reverse=True):
+                    if app_slug in slug:
+                        return app_slug
+    except OSError:
+        return None
+    return None
+
+
 def _resolve_run_output_dir():
     """Prefer ``paths.BASE_OUTPUT_DIR`` (the timestamp folder); fall back to ``OUTPUT_DIR``."""
     try:
@@ -174,7 +226,23 @@ def main(device, *args, **kwargs):
                 type(exc).__name__, exc,
             )
 
-        app = os.environ.get("APPIUM_APP") or "metronome"
+        # App resolution chain (post-2026-05-12 fix), most-trusted first:
+        #   1. APPIUM_APP env var — set by the per-app interaction wrappers
+        #      (e.g. interaction_appium_tipuous.py does
+        #      `os.environ.setdefault("APPIUM_APP", "tipuous")`) or by the
+        #      generic dispatcher's launcher.
+        #   2. APK-basename slug — derived from the per-subject output folder
+        #      name (which AndroidRunner slugifies from the APK path).
+        #   3. "unknown" — explicit. Previously this fell back to "metronome",
+        #      which silently misclassified every non-Metronome run as
+        #      Metronome (10 rows in tracking_matrix.csv had to be backfilled
+        #      after this bug was discovered 2026-05-12). NEVER default to a
+        #      specific app slug — make the misclassification visible instead.
+        app = (
+            os.environ.get("APPIUM_APP")
+            or _infer_app_from_run_output(run_output_dir)
+            or "unknown"
+        )
         # Variant resolution, in order of trust:
         #   1. APPIUM_BUILD_LABEL env var (explicit, set by the experiment launcher)
         #   2. Scan the per-subject output folder name (slug of the APK path)

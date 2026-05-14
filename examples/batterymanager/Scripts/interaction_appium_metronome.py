@@ -25,6 +25,13 @@ _WORKSPACE_ROOT = os.path.abspath(os.path.join(_HERE, *([os.pardir] * 4)))
 if _WORKSPACE_ROOT not in sys.path:
     sys.path.insert(0, _WORKSPACE_ROOT)
 
+# Tag this run as the metronome app so after_experiment.py's tracking-matrix
+# updater records `app=metronome` reliably (instead of relying on it being
+# the legacy default — which was the source of the 2026-05-12 misclassification
+# bug for non-Metronome runs). Uses setdefault so an explicit caller-set
+# APPIUM_APP still wins.
+os.environ.setdefault("APPIUM_APP", "metronome")
+
 
 def main(device, *args, **kwargs):
     from appium_android_tests import metronome

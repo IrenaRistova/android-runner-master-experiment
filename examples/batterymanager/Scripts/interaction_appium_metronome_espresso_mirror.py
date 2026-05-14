@@ -21,6 +21,11 @@ _WORKSPACE_ROOT = os.path.abspath(os.path.join(_HERE, *([os.pardir] * 4)))
 if _WORKSPACE_ROOT not in sys.path:
     sys.path.insert(0, _WORKSPACE_ROOT)
 
+# Tag this run as the metronome app so after_experiment.py's tracking-matrix
+# updater records `app=metronome` reliably (independent of the legacy default).
+# Uses setdefault so an explicit caller-set APPIUM_APP still wins.
+os.environ.setdefault("APPIUM_APP", "metronome")
+
 
 def main(device, *args, **kwargs):
     os.environ["APPIUM_WORKLOAD"] = "espresso_mirror"
