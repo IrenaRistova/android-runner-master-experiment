@@ -1,0 +1,45 @@
+{
+  "_comment": "Pixel 3 + Diaguard Bangcle-packed v3.15.1. *** Update the `paths` field below with the actual packed APK path AFTER you receive it back from the prof's Bangcle pack run. *** Diaguard's baseline APK is pure-bytecode (zero `lib/<ABI>/` directories) — per docs/BANGCLE_PIXEL9_ABI_COMPATIBILITY.md, Bangcle's input-driven ABI propagation means the packed APK will ship `lib/armeabi-v7a/libSecShell.so` only. That's Pixel 3 / Pixel 6 compatible (both accept armv7) but not Pixel 9 (arm64-only). This is the documented Option C path: measure the (bangcle, pixel9) cell as missing, measure (bangcle, pixel3) and (bangcle, pixel6) cleanly. Sign with apksigner before running. Run command: APPIUM_BUILD_LABEL=bangcle python3 . examples/batterymanager/diaguard_bangcle_pixel3.json",
+  "type": "native",
+  "adb_path": "/home/irena/Android/Sdk/platform-tools/adb",
+  "devices": {
+    "Pixel 3": {}
+  },
+  "repetitions": 1,
+  "interaction_covers_duration": true,
+  "paths": [
+    "/home/irena/Documents/Master Thesis/APKs/diaguard_protected.signed.apk"
+  ],
+  "application_id": "com.faltenreich.diaguard",
+  "duration": 120000,
+  "profilers": {
+    "batterymanager": {
+      "experiment_aggregation": "default",
+      "sample_interval": 100,
+      "data_points": [
+        "BATTERY_PROPERTY_CURRENT_NOW",
+        "EXTRA_VOLTAGE"
+      ],
+      "persistency_strategy": [
+        "adb_log"
+      ]
+    },
+    "android": {
+      "sample_interval": 1000,
+      "data_points": [
+        "cpu",
+        "mem"
+      ]
+    }
+  },
+  "scripts": {
+    "before_experiment": "Scripts/before_experiment_uninstall_diaguard.py",
+    "before_run": "Scripts/before_run.py",
+    "after_launch": "Scripts/after_launch.py",
+    "interaction": "Scripts/interaction_appium_diaguard.py",
+    "before_close": "Scripts/before_close.py",
+    "after_run": "Scripts/after_run.py",
+    "after_experiment": "Scripts/after_experiment.py"
+  },
+  "time_between_run": 5000
+}
