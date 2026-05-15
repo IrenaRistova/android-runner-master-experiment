@@ -1,0 +1,45 @@
+{
+  "_comment": "Pixel 6 + Diaguard Bangcle-packed v3.15.1. Sibling of diaguard_bangcle_pixel3.json with the device block swapped. Same Bangcle armv7-only output applies — Pixel 6 accepts armv7 (it's a 64-bit device that still supports 32-bit native libs, unlike Pixel 9 which is 64-bit-only). Update `paths` with the packed APK path after receiving it back. Run: APPIUM_BUILD_LABEL=bangcle python3 . examples/batterymanager/diaguard_bangcle_pixel6.json",
+  "type": "native",
+  "adb_path": "/home/irena/Android/Sdk/platform-tools/adb",
+  "devices": {
+    "Pixel 6": {}
+  },
+  "repetitions": 1,
+  "interaction_covers_duration": true,
+  "paths": [
+    "/home/irena/Documents/Master Thesis/APKs/diaguard_protected.signed.apk"
+  ],
+  "application_id": "com.faltenreich.diaguard",
+  "duration": 120000,
+  "profilers": {
+    "batterymanager": {
+      "experiment_aggregation": "default",
+      "sample_interval": 100,
+      "data_points": [
+        "BATTERY_PROPERTY_CURRENT_NOW",
+        "EXTRA_VOLTAGE"
+      ],
+      "persistency_strategy": [
+        "adb_log"
+      ]
+    },
+    "android": {
+      "sample_interval": 1000,
+      "data_points": [
+        "cpu",
+        "mem"
+      ]
+    }
+  },
+  "scripts": {
+    "before_experiment": "Scripts/before_experiment_uninstall_diaguard.py",
+    "before_run": "Scripts/before_run.py",
+    "after_launch": "Scripts/after_launch.py",
+    "interaction": "Scripts/interaction_appium_diaguard.py",
+    "before_close": "Scripts/before_close.py",
+    "after_run": "Scripts/after_run.py",
+    "after_experiment": "Scripts/after_experiment.py"
+  },
+  "time_between_run": 5000
+}
