@@ -70,22 +70,30 @@ class Android(Profiler):
     def get_data(self, device, app):
         """Runs the profiling methods every self.interval seconds in a separate thread"""
         self.lock.acquire()
-        if not self.profile:
+        try:
+            if not self.profile:
+                return
+            start = timeit.default_timer()
+            try:
+                device_time = device.shell('date -u')
+                row = [device_time]
+                if 'cpu' in self.data_points:
+                    row.append(self.get_cpu_usage(device))
+                if 'mem' in self.data_points:
+                    row.append(self.get_mem_usage(device, app))
+                self.data.append(row)
+            except Exception:
+                # Transient errors (e.g. "No process found for <pkg>" during a brief
+                # terminate_app+activate_app recovery in the interaction script) must
+                # NOT leak the lock — otherwise stop_profiling() will deadlock and
+                # teardown hangs forever. Swallow and let the next Timer retry.
+                pass
+            end = timeit.default_timer()
+            interval = max(float(0), self.interval - max(0, int(end - start)))
+        finally:
             self.lock.release()
-            return
-        start = timeit.default_timer()
-        device_time = device.shell('date -u')
-        row = [device_time]
-        if 'cpu' in self.data_points:
-            row.append(self.get_cpu_usage(device))
-        if 'mem' in self.data_points:
-            row.append(self.get_mem_usage(device, app))
-        self.data.append(row)
-        end = timeit.default_timer()
-        # timer results could be negative
-        interval = max(float(0), self.interval - max(0, int(end - start)))
-        self.lock.release()
-        threading.Timer(interval, self.get_data, args=(device, app)).start()
+        if self.profile:
+            threading.Timer(interval, self.get_data, args=(device, app)).start()
 
     def stop_profiling(self, device, **kwargs):
         self.lock.acquire()
