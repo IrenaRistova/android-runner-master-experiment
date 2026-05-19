@@ -1,0 +1,45 @@
+{
+  "_comment": "WiFi-ADB validation copy of avnc_baseline_pixel9.json. Uses 'Pixel 9-W' device alias which maps to 10.15.10.93:5555 (TCP ADB over WiFi) in devices.json — same physical Pixel 9 (56040DLAQ0027U) but reached via WiFi instead of USB. Goal: prove every Appium + scenarios.py call works transparently over TCP-ADB so we can later cut USB power via uhubctl without losing the test session. APK + interaction + scripts unchanged from the USB version. Created 2026-05-19 as part of Epic 1.6 / WiFi-ADB validation.",
+  "type": "native",
+  "adb_path": "/home/irena/Android/Sdk/platform-tools/adb",
+  "devices": {
+    "Pixel 9-W": {}
+  },
+  "repetitions": 1,
+  "interaction_covers_duration": true,
+  "paths": [
+    "/home/irena/Documents/Master Experiment/app_repositories_newest/final_dataset/gujjwal00_avnc/app/build/outputs/apk/debug/app-debug.apk"
+  ],
+  "application_id": "com.gaurav.avnc.debug",
+  "duration": 120000,
+  "profilers": {
+    "batterymanager": {
+      "experiment_aggregation": "default",
+      "sample_interval": 100,
+      "data_points": [
+        "BATTERY_PROPERTY_CURRENT_NOW",
+        "EXTRA_VOLTAGE"
+      ],
+      "persistency_strategy": [
+        "adb_log"
+      ]
+    },
+    "android": {
+      "sample_interval": 1000,
+      "data_points": [
+        "cpu",
+        "mem"
+      ]
+    }
+  },
+  "scripts": {
+    "before_experiment": "Scripts/before_experiment_uninstall_avnc.py",
+    "before_run": "Scripts/before_run.py",
+    "after_launch": "Scripts/after_launch.py",
+    "interaction": "Scripts/interaction_appium_avnc.py",
+    "before_close": "Scripts/before_close.py",
+    "after_run": "Scripts/after_run.py",
+    "after_experiment": "Scripts/after_experiment.py"
+  },
+  "time_between_run": 5000
+}
