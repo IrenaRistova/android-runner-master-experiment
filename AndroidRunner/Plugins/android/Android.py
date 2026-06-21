@@ -53,13 +53,39 @@ class Android(Profiler):
             # https://stackoverflow.com/questions/23175809/str-translate-gives-typeerror-translate-takes-one-argument-2-given-worked-i
             return device.shell('dumpsys meminfo | grep Used').translate(str.maketrans('', '', '(kB,K')).split()[2]
         else:
-            result = device.shell(
-                'dumpsys meminfo {} | grep TOTAL'.format(app))
-            if result == '':
-                result = device.shell('dumpsys meminfo {}'.format(app))
-                if 'No process found' in result:
-                    raise Exception('Android Profiler: {}'.format(result))
-            return ' '.join(result.strip().split()).split()[1]
+            # Issue 20 fix (2026-06-21): Android 13+ changed `dumpsys meminfo <app>`
+            # output format. `grep TOTAL` matches the "TOTAL PSS:" line cleanly on
+            # Android 12 but on 13+ the matching line may have different tokens,
+            # OR the grep returns empty entirely. The fallback `dumpsys meminfo <app>`
+            # without grep then returned the WHOLE dumpsys output, and `.split()[1]`
+            # parsed the literal string "Memory" from the "Applications Memory Usage"
+            # header. That string got written into the per-cell CSV as the mem value,
+            # and AR's aggregator later crashed with `float('Memory')` ValueError.
+            # Fix: tolerate the format variation by trying multiple grep patterns
+            # and validating that token[1] is numeric before returning it; on
+            # failure return '0' (data point lost but cell completes successfully).
+            for pat in ['TOTAL PSS', 'TOTAL', 'Pss Total']:
+                result = device.shell(
+                    "dumpsys meminfo {} | grep '{}'".format(app, pat))
+                if result and result.strip():
+                    break
+            if not result or not result.strip():
+                # Last-resort: extract any line with a numeric Pss-like value.
+                raw = device.shell('dumpsys meminfo {}'.format(app))
+                if 'No process found' in raw:
+                    raise Exception('Android Profiler: {}'.format(raw))
+                # Look for a line starting with "TOTAL" followed by digits.
+                import re as _re
+                m = _re.search(r'TOTAL\s*[A-Za-z:]*\s+(\d+)', raw)
+                if m:
+                    return m.group(1)
+                return '0'
+            # Try to find the first numeric token in the matched line.
+            tokens = ' '.join(result.strip().split()).split()
+            for t in tokens:
+                if t.isdigit():
+                    return t
+            return '0'
 
     def start_profiling(self, device, **kwargs):
         self.profile = True
