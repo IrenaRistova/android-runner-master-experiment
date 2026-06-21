@@ -56,6 +56,91 @@ VOLTAGE_NOW_PATH = "/sys/class/power_supply/battery/voltage_now"
 BATTERYMANAGER_PACKAGE = "com.example.batterymanager_utility"
 BATTERY_STATS_PERMISSION = "android.permission.BATTERY_STATS"
 
+
+# ---------------------------------------------------------------------------
+# Per-device sign-convention table for BATTERY_PROPERTY_CURRENT_NOW
+# ---------------------------------------------------------------------------
+#
+# The Java `BatteryManager.getIntProperty(BATTERY_PROPERTY_CURRENT_NOW)` call
+# returns values whose sign convention depends on (vendor PMIC + Health HAL
+# version + Android version). The two empirically observed conventions in
+# this cohort:
+#
+#   modern (+1):   positive = current entering battery (charging)
+#                  negative = current leaving battery (discharging)
+#                  Used by Pixel 6 (Android 13) + Pixel 9 (Android 16).
+#
+#   legacy (-1):   positive = current leaving battery (discharging)
+#                  negative = current entering battery (charging)
+#                  Used by Pixel 3 (Android 12). The Pixel 3 Health HAL reads
+#                  from /sys/class/power_supply/maxfg/current_now (Maxim
+#                  MAX17XXX fuel gauge), which exposes the legacy convention.
+#
+# IMPORTANT: this table is for the *Java API value only*. The kernel sysfs
+# entry /sys/class/power_supply/battery/current_now uses the modern (+1)
+# convention on ALL three devices, so verify_discharging() (which reads
+# sysfs) does NOT need to apply this multiplier.
+#
+# Application:
+#   - For raw display of signed current (plots, validation-gate output): apply.
+#   - For energy / power magnitudes: NOT needed because every code path uses
+#     abs() (audited 2026-06-02; see PIXEL3_CURRENT_NOW_SIGN_INVERSION.md).
+#   - For matched-pair ratios: NOT needed because the same multiplier
+#     applies to both runs in a pair and cancels.
+#
+# Keyed by `ro.product.device` (the Android product code). Defaults to +1 if
+# the device isn't in the table — this keeps newly-added devices safe-by-
+# default until empirically confirmed otherwise.
+#
+# Discovered 2026-06-02 during first 3-phone parallel S2-baseline smoke; full
+# diagnosis in docs/PIXEL3_CURRENT_NOW_SIGN_INVERSION.md.
+CURRENT_NOW_API_SIGN: Dict[str, int] = {
+    "blueline": -1,   # Pixel 3, Android 12. Maxim MAX17XXX via Health HAL @2.0
+    "oriole":   +1,   # Pixel 6, Android 13. Modern convention.
+    "tokay":    +1,   # Pixel 9, Android 16. Modern convention.
+}
+
+
+def current_now_api_sign(device) -> int:
+    """Return the sign multiplier for this device's BATTERY_PROPERTY_CURRENT_NOW.
+
+    Returns +1 (modern convention) or -1 (legacy convention). Multiply the
+    raw Java-API current_now value by this to convert to the modern (and
+    canonical thesis) convention.
+
+    Reads `ro.product.device` via `getprop`. Defaults to +1 (modern) if the
+    device isn't in CURRENT_NOW_API_SIGN — newly-added devices are assumed
+    modern until proven otherwise (the legacy convention is rare on
+    post-2020 Android phones).
+    """
+    try:
+        product_device = device.shell("getprop ro.product.device").strip()
+    except Exception:
+        return +1
+    return CURRENT_NOW_API_SIGN.get(product_device, +1)
+
+
+def normalize_current_now_api(device, raw_value):
+    """Normalize a Java-API BATTERY_PROPERTY_CURRENT_NOW value to modern convention.
+
+    Multiplies by the per-device sign multiplier (see CURRENT_NOW_API_SIGN
+    docstring). Returns the same numeric type as input.
+
+    For modern-convention devices (Pixel 6/9) this is a no-op (multiply by +1).
+    For Pixel 3 (legacy convention) the sign flips.
+
+    Use this in code paths that report signed current for display, plots, or
+    validation-gate output. Do NOT use for energy/power magnitude computations
+    — those should use abs() instead (the multiplier and abs() interact
+    pathologically when called naively).
+    """
+    multiplier = current_now_api_sign(device)
+    if multiplier == 1:
+        return raw_value
+    if raw_value is None:
+        return None
+    return -raw_value
+
 CAPABILITY_CACHE_DIRNAME = ".device_state_capabilities"
 
 DEFAULT_BRIGHTNESS_VALUE = 128  # mid-range (0..255)
@@ -311,6 +396,14 @@ def attempt_disable_charging(device) -> Dict[str, Any]:
 
 def verify_discharging(device, settle_s: float = SETTLE_SECONDS_DEFAULT) -> Dict[str, Any]:
     """Ground-truth: after ``settle_s`` seconds, read ``current_now`` and classify.
+
+    Reads from ``/sys/class/power_supply/battery/current_now`` directly (NOT the
+    Java BatteryManager API). The sysfs path uses the modern sign convention on
+    ALL three cohort devices (Pixel 3 / 6 / 9) — verified empirically 2026-06-02.
+    Therefore this function is **unaffected** by the Pixel 3 Java-API sign
+    inversion documented in CURRENT_NOW_API_SIGN above. No per-device sign
+    multiplier is needed here.
+
 
     Verdict semantics::
 
