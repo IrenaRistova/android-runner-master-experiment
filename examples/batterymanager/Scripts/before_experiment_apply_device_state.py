@@ -142,6 +142,72 @@ def apply_device_state(device) -> Dict[str, Any]:
             "(continuing): %s: %s" % (serial, type(ex).__name__, ex)
         )
 
+    # Disable Play Protect / Package Verifier so unsigned debug APKs (S2-group
+    # Baseline + CpuFactorialTest, Bangcle-packed stubs, etc.) don't trigger
+    # the "Unsafe app blocked" dialog or get silently uninstalled mid-experiment.
+    # Discovered 2026-06-02 when first 3-phone parallel smoke FAILED on Pixel 3
+    # + Pixel 6 (Android 12 / 13) because Play Protect uninstalled the S2
+    # Baseline APK after AR's install step but before AR's am-start. Pixel 9
+    # (Android 16) did not block. These four settings are user-mode (no root),
+    # persistent across reboots, and revert when re-enabled via Play Store
+    # Settings → Play Protect → "Scan apps with Play Protect" ON.
+    try:
+        for setting in (
+            "package_verifier_user_consent -1",
+            "verifier_verify_adb_installs 0",
+            "package_verifier_enable 0",
+            "upload_apk_enable 0",
+        ):
+            device.shell("settings put global %s" % setting)
+        _log_stdout(
+            "before_experiment_apply_device_state: Play Protect / package "
+            "verifier disabled on %s (user-mode settings; persistent until "
+            "user re-enables in Play Store settings)" % serial
+        )
+    except Exception as ex:
+        _log_stderr(
+            "before_experiment_apply_device_state: Play Protect disable raised "
+            "on %s (continuing — risk of mid-experiment 'Unsafe app blocked' "
+            "dialog): %s: %s" % (serial, type(ex).__name__, ex)
+        )
+
+    # Reset battery-service mocking so the Java BatteryManager API keeps
+    # receiving fresh PMIC updates during the run.
+    #
+    # AR's `device.unplug()` (called in `Experiment.prepare_device`) issues
+    # `dumpsys battery set usb 0` to mock USB-unplugged state. On **Android 12**
+    # (Pixel 3), this **freezes the battery service entirely** — dumpsys output
+    # shows `(UPDATES STOPPED -- use 'reset' to restart)`. The companion APK
+    # (`com.example.batterymanager_utility`) reads via
+    # `BatteryManager.getIntProperty(BATTERY_PROPERTY_CURRENT_NOW)`, which hits
+    # the frozen framework cache and returns pre-mock values for the whole run.
+    # Net effect on Pixel 3: even when hub-ctrl successfully cuts USB power
+    # (sysfs reports clean -270 mA discharge), the BM CSV samples show +200 mA
+    # (cached charge value) → average power computation is wrong → matched-pair
+    # invalid.
+    #
+    # Android 13 (Pixel 6) and 16 (Pixel 9) don't have this bug — the framework
+    # keeps updating despite the mock. Calling `dumpsys battery reset` here
+    # un-does the AR mock but is safe because:
+    #   1. Our hub-ctrl (Epic 1.6) cuts USB power physically — no mock needed.
+    #   2. When the hub cuts power, the framework receives the real
+    #      "USB-unplugged" event from the PMIC and reports it correctly.
+    #
+    # Discovered 2026-06-02 during first 3-phone parallel S2-baseline smoke.
+    try:
+        device.shell("dumpsys battery reset")
+        _log_stdout(
+            "before_experiment_apply_device_state: battery service reset on %s "
+            "(un-does AR's device.unplug() mock; hub-ctrl provides real power-cut)"
+            % serial
+        )
+    except Exception as ex:
+        _log_stderr(
+            "before_experiment_apply_device_state: battery reset raised on %s "
+            "(continuing — risk of frozen current_now on Android 12): %s: %s"
+            % (serial, type(ex).__name__, ex)
+        )
+
     disable_result: Optional[Dict[str, Any]] = None
     try:
         disable_result = ds.attempt_disable_charging(device)
