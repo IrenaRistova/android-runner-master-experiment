@@ -1,5 +1,5 @@
 {
-  "_comment": "Pixel 6 baseline Metronome run. Identical to monkey_espresso_mirror_2min_baseline.json EXCEPT the device block points to Pixel 6 instead of Pixel 3. Pixel 6 is arm64-v8a only — the Bangcle Metronome APK (armeabi-v7a only) WILL NOT install here, so this config only references the multi-arch baseline APK. If the BatteryManager companion fails with SecurityException on Pixel 6, run: adb -s <PIXEL6_SERIAL> shell pm grant com.example.batterymanager_utility android.permission.BATTERY_STATS",
+  "_comment": "Pixel 6 baseline Metronome run. Identical to monkey_espresso_mirror_2min_baseline.json EXCEPT the device block points to Pixel 6 instead of Pixel 3. Pixel 6 is arm64-v8a only \u2014 the Bangcle Metronome APK (armeabi-v7a only) WILL NOT install here, so this config only references the multi-arch baseline APK. If the BatteryManager companion fails with SecurityException on Pixel 6, run: adb -s <PIXEL6_SERIAL> shell pm grant com.example.batterymanager_utility android.permission.BATTERY_STATS",
   "type": "native",
   "adb_path": "/home/irena/Android/Sdk/platform-tools/adb",
   "devices": {
@@ -18,6 +18,7 @@
       "sample_interval": 100,
       "data_points": [
         "BATTERY_PROPERTY_CURRENT_NOW",
+        "BATTERY_PROPERTY_STATUS",
         "EXTRA_VOLTAGE"
       ],
       "persistency_strategy": [

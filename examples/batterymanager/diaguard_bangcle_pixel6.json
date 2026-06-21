@@ -1,5 +1,5 @@
 {
-  "_comment": "Pixel 6 + Diaguard Bangcle-packed v3.15.1. Sibling of diaguard_bangcle_pixel3.json with the device block swapped. Same Bangcle armv7-only output applies — Pixel 6 accepts armv7 (it's a 64-bit device that still supports 32-bit native libs, unlike Pixel 9 which is 64-bit-only). Update `paths` with the packed APK path after receiving it back. Run: APPIUM_BUILD_LABEL=bangcle python3 . examples/batterymanager/diaguard_bangcle_pixel6.json",
+  "_comment": "Pixel 6 + Diaguard Bangcle-packed v3.15.1. Sibling of diaguard_bangcle_pixel3.json with the device block swapped. Same Bangcle armv7-only output applies \u2014 Pixel 6 accepts armv7 (it's a 64-bit device that still supports 32-bit native libs, unlike Pixel 9 which is 64-bit-only). Update `paths` with the packed APK path after receiving it back. Run: APPIUM_BUILD_LABEL=bangcle python3 . examples/batterymanager/diaguard_bangcle_pixel6.json",
   "type": "native",
   "adb_path": "/home/irena/Android/Sdk/platform-tools/adb",
   "devices": {
@@ -18,6 +18,7 @@
       "sample_interval": 100,
       "data_points": [
         "BATTERY_PROPERTY_CURRENT_NOW",
+        "BATTERY_PROPERTY_STATUS",
         "EXTRA_VOLTAGE"
       ],
       "persistency_strategy": [

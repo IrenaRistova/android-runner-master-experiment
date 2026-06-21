@@ -1,5 +1,5 @@
 {
-  "_comment": "Pixel 3 + Bangcle-packed Metronome v2.1.1 (versionCode 26). Sibling of metronome_bangcle_pixel9.json; same APK (it has all 4 ABIs: arm64-v8a + armeabi-v7a + x86 + x86_64). Pixel 3 selects armeabi-v7a or arm64-v8a at install time (both are supported on Android 12). Used to verify cross-device compatibility of the same packed binary AND to smoke-test the Compose testTag fallback patch in _lib/scoring.py (post-2026-05-12). Float-charge masking applies to Pixel 3 as well — energy column will be tagged energy_invalid_usb_supplying / energy_invalid_charge_dominant until Epic 1.6 hub-ctrl is in place.",
+  "_comment": "Pixel 3 + Bangcle-packed Metronome v2.1.1 (versionCode 26). Sibling of metronome_bangcle_pixel9.json; same APK (it has all 4 ABIs: arm64-v8a + armeabi-v7a + x86 + x86_64). Pixel 3 selects armeabi-v7a or arm64-v8a at install time (both are supported on Android 12). Used to verify cross-device compatibility of the same packed binary AND to smoke-test the Compose testTag fallback patch in _lib/scoring.py (post-2026-05-12). Float-charge masking applies to Pixel 3 as well \u2014 energy column will be tagged energy_invalid_usb_supplying / energy_invalid_charge_dominant until Epic 1.6 hub-ctrl is in place.",
   "type": "native",
   "adb_path": "/home/irena/Android/Sdk/platform-tools/adb",
   "devices": {
@@ -18,6 +18,7 @@
       "sample_interval": 100,
       "data_points": [
         "BATTERY_PROPERTY_CURRENT_NOW",
+        "BATTERY_PROPERTY_STATUS",
         "EXTRA_VOLTAGE"
       ],
       "persistency_strategy": [

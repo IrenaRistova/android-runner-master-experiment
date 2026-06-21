@@ -1,5 +1,5 @@
 {
-  "_comment": "[WIFI-MODE + HUB-CTRL COPY of crcontainer_baseline_pixel9.json, auto-generated 2026-06-02 by tools/generate_wifi_configs.py --mode wifi_hubctl --phones pixel9. Targets Pixel 9-W (Android 16) via WiFi-ADB on hub 5-1.3.2 port 2. usb_handler block cuts USB power for measurement-grade discharge then restores it between runs.] Pixel 9 + curiouslearning CRcontainer baseline at upstream v2.34.2 (versionCode 70). APK built from sibling worktree `curiouslearning_CRcontainer_v2.34.2/` (origin/main detached-HEAD at ab6b654); the pinned `curiouslearning_CRcontainer/` stays at v2.28 per AndroT-frozen convention (see specs/app_inclusion.json::measured_version pattern matching Metronome v2.1.1 + LinkHub v2.1.0 version-bumps). v2.34.2 ships 4 ABIs incl. arm64-v8a + librive-android.so (Rive animations added between v2.28 and v2.34.2, unlocks Pixel 9 Bangcle per docs/BANGCLE_PIXEL9_ABI_COMPATIBILITY.md). Network: hits public dev backend https://devcuriousreader.wpcomstaging.com/container_app_manifest/dev/web_app_manifest.json. Run: APPIUM_BUILD_LABEL=baseline python3 . examples/batterymanager/crcontainer_baseline_pixel9.json",
+  "_comment": "[WIFI-MODE + HUB-CTRL COPY of crcontainer_baseline_pixel9.json, auto-generated 2026-06-02 by tools/generate_wifi_configs.py --mode wifi_hubctl --phones pixel9. Targets Pixel 9-W (Android 16) via WiFi-ADB on hub 3-3 port 2. usb_handler block cuts USB power for measurement-grade discharge then restores it between runs.] Pixel 9 + curiouslearning CRcontainer baseline at upstream v2.34.2 (versionCode 70). APK built from sibling worktree `curiouslearning_CRcontainer_v2.34.2/` (origin/main detached-HEAD at ab6b654); the pinned `curiouslearning_CRcontainer/` stays at v2.28 per AndroT-frozen convention (see specs/app_inclusion.json::measured_version pattern matching Metronome v2.1.1 + LinkHub v2.1.0 version-bumps). v2.34.2 ships 4 ABIs incl. arm64-v8a + librive-android.so (Rive animations added between v2.28 and v2.34.2, unlocks Pixel 9 Bangcle per docs/BANGCLE_PIXEL9_ABI_COMPATIBILITY.md). Network: hits public dev backend https://devcuriousreader.wpcomstaging.com/container_app_manifest/dev/web_app_manifest.json. Run: APPIUM_BUILD_LABEL=baseline python3 . examples/batterymanager/crcontainer_baseline_pixel9.json",
   "type": "native",
   "adb_path": "/home/irena/Android/Sdk/platform-tools/adb",
   "devices": {
@@ -18,6 +18,7 @@
       "sample_interval": 100,
       "data_points": [
         "BATTERY_PROPERTY_CURRENT_NOW",
+        "BATTERY_PROPERTY_STATUS",
         "EXTRA_VOLTAGE"
       ],
       "persistency_strategy": [
@@ -43,7 +44,7 @@
   },
   "time_between_run": 5000,
   "usb_handler": {
-    "enable_command": "sudo -n /usr/sbin/uhubctl -l 5-1.3.2 -p 2 -a 1",
-    "disable_command": "sudo -n /usr/sbin/uhubctl -l 5-1.3.2 -p 2 -a 0"
+    "enable_command": "sudo -n /usr/sbin/uhubctl -l 3-3 -p 2 -a 1",
+    "disable_command": "sudo -n /usr/sbin/uhubctl -l 3-3 -p 2 -a 0"
   }
 }
