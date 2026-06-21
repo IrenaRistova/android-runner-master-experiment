@@ -1,5 +1,5 @@
 {
-  "_comment": "WiFi-ADB validation copy of avnc_baseline_pixel9.json. Uses 'Pixel 9-W' device alias which maps to 10.15.10.93:5555 (TCP ADB over WiFi) in devices.json — same physical Pixel 9 (56040DLAQ0027U) but reached via WiFi instead of USB. Goal: prove every Appium + scenarios.py call works transparently over TCP-ADB so we can later cut USB power via uhubctl without losing the test session. APK + interaction + scripts unchanged from the USB version. Created 2026-05-19 as part of Epic 1.6 / WiFi-ADB validation.",
+  "_comment": "WiFi-ADB validation copy of avnc_baseline_pixel9.json. Uses 'Pixel 9-W' device alias which maps to 10.15.10.93:5555 (TCP ADB over WiFi) in devices.json \u2014 same physical Pixel 9 (56040DLAQ0027U) but reached via WiFi instead of USB. Goal: prove every Appium + scenarios.py call works transparently over TCP-ADB so we can later cut USB power via uhubctl without losing the test session. APK + interaction + scripts unchanged from the USB version. Created 2026-05-19 as part of Epic 1.6 / WiFi-ADB validation.",
   "type": "native",
   "adb_path": "/home/irena/Android/Sdk/platform-tools/adb",
   "devices": {
@@ -18,6 +18,7 @@
       "sample_interval": 100,
       "data_points": [
         "BATTERY_PROPERTY_CURRENT_NOW",
+        "BATTERY_PROPERTY_STATUS",
         "EXTRA_VOLTAGE"
       ],
       "persistency_strategy": [

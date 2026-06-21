@@ -13,7 +13,7 @@
   "application_id": "e.www.baseline",
   "duration": 60000,
   "usb_handler": {
-    "enable_command":  "sudo -n /usr/sbin/uhubctl -l 5-1.3.2.1 -p 1 -a 1",
+    "enable_command": "sudo -n /usr/sbin/uhubctl -l 5-1.3.2.1 -p 1 -a 1",
     "disable_command": "sudo -n /usr/sbin/uhubctl -l 5-1.3.2.1 -p 1 -a 0"
   },
   "profilers": {
@@ -22,6 +22,7 @@
       "sample_interval": 100,
       "data_points": [
         "BATTERY_PROPERTY_CURRENT_NOW",
+        "BATTERY_PROPERTY_STATUS",
         "EXTRA_VOLTAGE"
       ],
       "persistency_strategy": [

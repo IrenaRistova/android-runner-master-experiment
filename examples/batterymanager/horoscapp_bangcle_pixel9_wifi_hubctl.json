@@ -1,5 +1,5 @@
 {
-  "_comment": "[WIFI-MODE + HUB-CTRL COPY of horoscapp_bangcle_pixel9.json, auto-generated 2026-06-02 by tools/generate_wifi_configs.py --mode wifi_hubctl --phones pixel9. Targets Pixel 9-W (Android 16) via WiFi-ADB on hub 5-1.3.2 port 2. usb_handler block cuts USB power for measurement-grade discharge then restores it between runs.] Pixel 9 + angelsoft071 HoroscApp Bangcle variant. APK = signed pack of the v1.0.2 baseline (4 ABIs incl. arm64-v8a, libimage_processing_util_jni.so from CameraX wrapped; libSecShell.so added for all 4 ABIs). applicationId preserved at com.angelsoft.horoscapp. PageSizeMismatchDialog dismissed at session start via _dismiss_page_size_dialog_permanently. CAMERA permission auto-granted by interaction_appium_horoscapp.py before scenarios. Run: APPIUM_BUILD_LABEL=bangcle python3 . examples/batterymanager/horoscapp_bangcle_pixel9.json",
+  "_comment": "[WIFI-MODE + HUB-CTRL COPY of horoscapp_bangcle_pixel9.json, auto-generated 2026-06-02 by tools/generate_wifi_configs.py --mode wifi_hubctl --phones pixel9. Targets Pixel 9-W (Android 16) via WiFi-ADB on hub 3-3 port 2. usb_handler block cuts USB power for measurement-grade discharge then restores it between runs.] Pixel 9 + angelsoft071 HoroscApp Bangcle variant. APK = signed pack of the v1.0.2 baseline (4 ABIs incl. arm64-v8a, libimage_processing_util_jni.so from CameraX wrapped; libSecShell.so added for all 4 ABIs). applicationId preserved at com.angelsoft.horoscapp. PageSizeMismatchDialog dismissed at session start via _dismiss_page_size_dialog_permanently. CAMERA permission auto-granted by interaction_appium_horoscapp.py before scenarios. Run: APPIUM_BUILD_LABEL=bangcle python3 . examples/batterymanager/horoscapp_bangcle_pixel9.json",
   "type": "native",
   "adb_path": "/home/irena/Android/Sdk/platform-tools/adb",
   "devices": {
@@ -18,6 +18,7 @@
       "sample_interval": 100,
       "data_points": [
         "BATTERY_PROPERTY_CURRENT_NOW",
+        "BATTERY_PROPERTY_STATUS",
         "EXTRA_VOLTAGE"
       ],
       "persistency_strategy": [
@@ -43,7 +44,7 @@
   },
   "time_between_run": 5000,
   "usb_handler": {
-    "enable_command": "sudo -n /usr/sbin/uhubctl -l 5-1.3.2 -p 2 -a 1",
-    "disable_command": "sudo -n /usr/sbin/uhubctl -l 5-1.3.2 -p 2 -a 0"
+    "enable_command": "sudo -n /usr/sbin/uhubctl -l 3-3 -p 2 -a 1",
+    "disable_command": "sudo -n /usr/sbin/uhubctl -l 3-3 -p 2 -a 0"
   }
 }
