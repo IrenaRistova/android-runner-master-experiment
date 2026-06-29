@@ -99,6 +99,28 @@ def main(device, *args, **kwargs):
         except Exception:
             pass
 
+    # 2026-06-29 — pre-grant Android-13+ runtime permissions to cohort apps
+    # whose first-launch would otherwise pop a system permission dialog
+    # (POST_NOTIFICATIONS / CAMERA / READ_MEDIA_* / RECORD_AUDIO / etc.). The
+    # AR run installs a fresh APK on every cell so the dialog re-fires each
+    # run; granting via ``pm grant`` (or ``appops set`` for special-access
+    # ops) immediately after install + before launch removes the prompt
+    # entirely. See ``before_run_grant_runtime_perms.py`` for the per-app
+    # perm table and a discussion of the idempotency / failure modes.
+    try:
+        import before_run_grant_runtime_perms as _grant_perms
+        apk_path = _resolve_apk_path(args, kwargs)
+        _grant_perms.grant_runtime_perms(device, apk_path)
+    except Exception as exc:  # noqa: BLE001 - hook must never crash the experiment
+        try:
+            sys.stderr.write(
+                "before_run: runtime-perm pre-grant hook failed (continuing): {}: {}\n".format(
+                    type(exc).__name__, exc
+                )
+            )
+        except Exception:
+            pass
+
     # E1.5.T1 + T2: CPU + memory sampling is performed by Android Runner's
     # built-in `android` profiler plugin (Plugins/android/Android.py); see the
     # `profilers.android` block in the experiment JSON. No before_run wiring

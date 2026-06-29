@@ -8,7 +8,7 @@
   "repetitions": 1,
   "interaction_covers_duration": true,
   "paths": [
-    "/home/irena/Documents/Master Thesis/APKs/gallerywall_stub_baseline_protected.signed.apk"
+    "/home/irena/Documents/Master Thesis/APKs/gallerywall_stub_nsc_bangcle.signed.apk"
   ],
   "application_id": "com.baysoft.gallerywall.dev",
   "duration": 150000,

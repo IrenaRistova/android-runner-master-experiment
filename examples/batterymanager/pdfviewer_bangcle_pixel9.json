@@ -8,7 +8,7 @@
   "repetitions": 1,
   "interaction_covers_duration": true,
   "paths": [
-    "/home/irena/Documents/Master Thesis/APKs/pdfviewer_protected.signed.apk"
+    "/home/irena/Documents/Master Thesis/APKs/pdfviewer_stub_nsc_bangcle.signed.apk"
   ],
   "application_id": "com.rajat.sample.pdfviewer",
   "duration": 120000,
