@@ -1,5 +1,6 @@
 import os.path as op
 import os
+import subprocess
 import time
 import csv
 
@@ -44,11 +45,31 @@ class Garbagecollection(Profiler):
         device_path = '/data/local/tmp/ar_gc_logcat.txt'
         device.shell('logcat -f {} -d'.format(device_path))
 
-        device.pull(device_path, self.logcat_output)
+        # Bug 4 2026-06-30: AR's `device.pull` -> `Adb.pull` -> `pyand.ADB.run_cmd`
+        # uses `shlex.split(cmd)` to parse the command. With paths containing
+        # spaces (`Master Experiment`, `Pixel 9-W` etc.), the local destination
+        # path gets split into multiple arguments and adb silently rejects the
+        # pull. The output_dir for every cell in this thesis has at least 2
+        # space-containing components, so the AR plugin path NEVER produces a
+        # local file. Bypass the pyand wrapper entirely by invoking `adb pull`
+        # via subprocess.run with the path as a separate argument (no shell
+        # parsing involved).
+        try:
+            subprocess.run(
+                ['adb', '-s', device.id, 'pull', device_path, self.logcat_output],
+                check=True, capture_output=True, timeout=30,
+            )
+        except subprocess.SubprocessError as ex:
+            self.logger.critical(
+                'GC: adb pull failed: %s. expected_local=%s',
+                ex, self.logcat_output
+            )
+            return
+
         if not op.isfile(self.logcat_output) or os.path.getsize(self.logcat_output) == 0:
             self.logger.critical(
-                'Failed to pull logcat from {} (local file missing or empty after pull) '
-                '— cannot gather GC calls.'.format(device_path)
+                'GC: local file missing or empty after pull (expected %s) — cannot gather GC calls.',
+                self.logcat_output
             )
             return
 
