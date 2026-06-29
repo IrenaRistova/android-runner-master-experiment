@@ -33,6 +33,7 @@ Android 16 PageSizeMismatchDialog".
 
 import re
 import sys
+import threading
 import time
 
 
@@ -153,6 +154,59 @@ def _aggressive_dismiss_page_size_dialog(device, total_budget_s: float = 30.0) -
     return dismissed
 
 
+# Module-level guard so we never spawn more than one watcher per AR process,
+# even if after_launch.main() somehow fires twice.
+_WATCHER_STARTED = False
+
+
+def _background_dismiss_watcher(device, duration_s: float = 600.0) -> None:
+    """Daemon thread that keeps polling for the compat dialog through the
+    entire cell and dismisses it whenever it re-fires.
+
+    Why this exists (2026-06-29 night): on Pixel 6 + Pixel 9 (Android 16) the
+    'Android App Compatibility' dialog can re-fire MID-WORKLOAD, not just at
+    launch. Bangcle's runtime decryption triggers a delayed Activity recreate,
+    which the platform answers with a fresh compat dialog after our
+    after_launch foreground poll has already returned. Without this watcher,
+    the dialog stays modal for the rest of the cell, blocks Appium's element
+    finds, and the cell ends up CONTAM(float_mode_suspect) because no real
+    workload runs.
+
+    Implementation note: daemon=True means the thread dies automatically when
+    the AR python process exits at end-of-cell — no explicit cleanup needed
+    in before_close.py / after_run.py.
+
+    Polling cadence: 3 s. Each poll runs `uiautomator dump` + `cat`, which
+    coexists with Appium's UiAutomator2 server (different mechanism). 3 s is
+    a balance between catching the dialog quickly and adb-overhead.
+    """
+    deadline = time.monotonic() + duration_s
+    n_dismissed = 0
+    while time.monotonic() < deadline:
+        try:
+            bounds = _dump_and_extract_dsa_bounds(device)
+            if bounds is not None:
+                x1, y1, x2, y2 = bounds
+                cx, cy = (x1 + x2) // 2, (y1 + y2) // 2
+                try:
+                    device.shell("input tap %d %d" % (cx, cy))
+                    n_dismissed += 1
+                    try:
+                        sys.stdout.write(
+                            "after_launch BG watcher: dismissed compat dialog "
+                            "(#%d) at (%d,%d)\n" % (n_dismissed, cx, cy)
+                        )
+                        sys.stdout.flush()
+                    except Exception:
+                        pass
+                except Exception:
+                    pass
+        except Exception:
+            # Swallow everything — the watcher must never crash the AR run.
+            pass
+        time.sleep(3.0)
+
+
 # noinspection PyUnusedLocal,PyUnusedLocal
 def main(device, *args, **kwargs):
     print("AFTER_LAUNCH ARGS:", args)
@@ -168,7 +222,43 @@ def main(device, *args, **kwargs):
     # per-run fresh install resets the "Don't Show Again" persistent flag every time. Without
     # this, the dialog blocks monkey from successfully foregrounding the subject app, and the
     # Android profiler errors with "No process found" when it tries to dump meminfo.
-    n_dismissed = _aggressive_dismiss_page_size_dialog(device, total_budget_s=30.0)
+    #
+    # Foreground budget cut 30 s -> 5 s (2026-06-29): the daemon watcher below
+    # picks up anything that fires later (including mid-workload re-fires on
+    # Bangcle's Activity recreate). Shorter foreground budget reclaims ~25 s
+    # of bookkeeping per cell when the dialog is already up, and even more
+    # when no dialog is shown at all.
+    n_dismissed = _aggressive_dismiss_page_size_dialog(device, total_budget_s=5.0)
+
+    # Spawn the daemon background watcher so the dialog stays handled for the
+    # rest of the cell. daemon=True → dies automatically when AR process exits.
+    global _WATCHER_STARTED
+    if not _WATCHER_STARTED:
+        try:
+            t = threading.Thread(
+                target=_background_dismiss_watcher,
+                args=(device,),
+                kwargs={"duration_s": 600.0},
+                daemon=True,
+                name="after_launch_dismiss_watcher",
+            )
+            t.start()
+            _WATCHER_STARTED = True
+            try:
+                sys.stdout.write(
+                    "after_launch: background dismiss watcher started "
+                    "(polling every 3 s for 600 s)\n"
+                )
+            except Exception:
+                pass
+        except Exception as exc:
+            try:
+                sys.stderr.write(
+                    "after_launch: failed to start BG watcher (continuing): "
+                    "%s: %s\n" % (type(exc).__name__, exc)
+                )
+            except Exception:
+                pass
     if n_dismissed > 0:
         try:
             sys.stdout.write(
