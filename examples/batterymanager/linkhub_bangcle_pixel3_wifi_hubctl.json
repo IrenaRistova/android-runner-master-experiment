@@ -18,8 +18,13 @@
       "sample_interval": 100,
       "data_points": [
         "BATTERY_PROPERTY_CURRENT_NOW",
+        "BATTERY_PROPERTY_CURRENT_AVERAGE",
         "BATTERY_PROPERTY_STATUS",
-        "EXTRA_VOLTAGE"
+        "BATTERY_PROPERTY_CAPACITY",
+        "BATTERY_PROPERTY_CHARGE_COUNTER",
+        "BATTERY_PROPERTY_ENERGY_COUNTER",
+        "EXTRA_VOLTAGE",
+        "EXTRA_TEMPERATURE"
       ],
       "persistency_strategy": [
         "adb_log"
@@ -32,6 +37,14 @@
         "cpu",
         "mem"
       ]
+    },
+    "frametimes": {
+      "sample_interval": 1000,
+      "experiment_aggregation": "default"
+    },
+    "garbagecollection": {
+      "subject_aggregation": "default",
+      "experiment_aggregation": "default"
     }
   },
   "scripts": {
