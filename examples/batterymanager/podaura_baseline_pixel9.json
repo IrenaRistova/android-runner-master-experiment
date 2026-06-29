@@ -8,7 +8,7 @@
   "repetitions": 1,
   "interaction_covers_duration": true,
   "paths": [
-    "/home/irena/Documents/Master Experiment/app_repositories_newest/final_dataset/SkyD666_PodAura/app/build/outputs/apk/GitHub/debug/PodAura_3.2-alpha11_arm64-v8a_debug_GitHub.apk"
+    "/home/irena/Documents/Master Experiment/_external/patched_apks/SkyD666_PodAura/PodAura_3.2-alpha11_arm64-v8a_debug_GitHub.nscpatched.apk"
   ],
   "application_id": "com.skyd.anivu.debug",
   "duration": 150000,

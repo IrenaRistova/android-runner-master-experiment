@@ -8,7 +8,7 @@
   "repetitions": 1,
   "interaction_covers_duration": true,
   "paths": [
-    "/home/irena/Documents/Master Thesis/APKs/PodAura_3.2-alpha11_arm64-v8a_debug_GitHub_protected.signed.apk"
+    "/home/irena/Documents/Master Thesis/APKs/podaura_stub_nsc_bangcle.signed.apk"
   ],
   "application_id": "com.skyd.anivu.debug",
   "duration": 150000,

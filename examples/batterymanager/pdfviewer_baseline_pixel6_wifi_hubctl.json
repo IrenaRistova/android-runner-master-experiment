@@ -8,7 +8,7 @@
   "repetitions": 1,
   "interaction_covers_duration": true,
   "paths": [
-    "/home/irena/Documents/Master Experiment/app_repositories_newest/final_dataset/afreakyelf_Pdf-Viewer/app/build/outputs/apk/debug/app-debug.apk"
+    "/home/irena/Documents/Master Experiment/_external/patched_apks/afreakyelf_Pdf-Viewer/app-debug.nscpatched.apk"
   ],
   "application_id": "com.rajat.sample.pdfviewer",
   "duration": 120000,

@@ -8,7 +8,7 @@
   "repetitions": 1,
   "interaction_covers_duration": true,
   "paths": [
-    "/home/irena/Documents/Master Thesis/APKs/horoscope_protected.signed.apk"
+    "/home/irena/Documents/Master Thesis/APKs/horoscapp_stub_nsc_bangcle.signed.apk"
   ],
   "application_id": "com.angelsoft.horoscapp",
   "duration": 120000,

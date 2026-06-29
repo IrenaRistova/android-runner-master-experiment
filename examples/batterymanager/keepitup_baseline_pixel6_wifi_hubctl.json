@@ -8,7 +8,7 @@
   "repetitions": 1,
   "interaction_covers_duration": true,
   "paths": [
-    "/home/irena/Documents/Master Experiment/app_repositories_newest/final_dataset/ibbaa_keepitup/keepitupmain/build/outputs/apk/debug/keepitup-debug.apk"
+    "/home/irena/Documents/Master Experiment/_external/patched_apks/ibbaa_keepitup/keepitup-debug.nscpatched.apk"
   ],
   "application_id": "net.ibbaa.keepitup",
   "duration": 150000,

@@ -8,7 +8,7 @@
   "repetitions": 1,
   "interaction_covers_duration": true,
   "paths": [
-    "/home/irena/Documents/Master Experiment/app_repositories_newest/final_dataset/Faltenreich_Diaguard/app/build/outputs/apk/store/debug/app-store-debug.apk"
+    "/home/irena/Documents/Master Experiment/_external/patched_apks/Faltenreich_Diaguard/app-store-debug.nscpatched.apk"
   ],
   "application_id": "com.faltenreich.diaguard",
   "duration": 120000,

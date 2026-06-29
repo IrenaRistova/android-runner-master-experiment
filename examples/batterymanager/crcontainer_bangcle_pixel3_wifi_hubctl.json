@@ -8,7 +8,7 @@
   "repetitions": 1,
   "interaction_covers_duration": true,
   "paths": [
-    "/home/irena/Documents/Master Thesis/APKs/curios-reader_protected.signed.apk"
+    "/home/irena/Documents/Master Thesis/APKs/crcontainer_stub_nsc_bangcle.signed.apk"
   ],
   "application_id": "org.curiouslearning.container",
   "duration": 120000,
