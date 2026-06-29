@@ -35,13 +35,20 @@ class Garbagecollection(Profiler):
         #   Android logs "GC freed 320KB AllocSpace bytes, 0(0B) LOS objects"
         #   ('bytes', not 'objects', for AllocSpace). Simplify to just
         #   'GC freed'.
+        # Bug 3: AR's Adb.pull() returns the private `_ADB__output` of the
+        #   underlying adb-py library, which is None on newer adb versions
+        #   even when the pull succeeds (the success message "1460189 bytes
+        #   in 0.5s" goes through stderr and the library's check for "bytes
+        #   in" doesn't fire reliably). Don't trust the pull return value —
+        #   check the actual local file instead.
         device_path = '/data/local/tmp/ar_gc_logcat.txt'
         device.shell('logcat -f {} -d'.format(device_path))
 
-        pull_result = device.pull(device_path, self.logcat_output)
-        if pull_result is None or 'error' in pull_result.decode():
+        device.pull(device_path, self.logcat_output)
+        if not op.isfile(self.logcat_output) or os.path.getsize(self.logcat_output) == 0:
             self.logger.critical(
-                'Failed to pull logcat from {} — cannot gather GC calls.'.format(device_path)
+                'Failed to pull logcat from {} (local file missing or empty after pull) '
+                '— cannot gather GC calls.'.format(device_path)
             )
             return
 
