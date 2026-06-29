@@ -171,6 +171,35 @@ def apply_device_state(device) -> Dict[str, Any]:
             "dialog): %s: %s" % (serial, type(ex).__name__, ex)
         )
 
+    # Enable Appium's input-method editors. Without this, Android sometimes
+    # foregrounds the `Settings → Languages & Input → Available virtual
+    # keyboards` activity mid-cell when an Appium scenario does its first
+    # `send_keys` (the platform shows "an app wants to enable an input
+    # method" prompt). That activity blocks the workload for the rest of the
+    # cell -> CONTAM. Observed on Pixel 9 / 6 / 3 during the 2026-06-29 pilot.
+    #
+    # `ime enable` is idempotent and persistent across reboots. Re-running
+    # it every experiment is cheap. Three Appium IMEs ship with the Appium
+    # Settings APK; enabling all three covers UnicodeIME (for special
+    # characters), AppiumIME (basic typing) and EmptyIME (no-op fallback).
+    try:
+        for ime_id in (
+            "io.appium.settings/.AppiumIME",
+            "io.appium.settings/.UnicodeIME",
+            "io.appium.settings/.EmptyIME",
+        ):
+            device.shell("ime enable %s" % ime_id)
+        _log_stdout(
+            "before_experiment_apply_device_state: Appium IMEs enabled on %s "
+            "(prevents mid-cell 'Available virtual keyboards' Settings prompt)" % serial
+        )
+    except Exception as ex:
+        _log_stderr(
+            "before_experiment_apply_device_state: Appium IME enable raised on %s "
+            "(continuing — risk of mid-cell Settings prompt blocking the workload): "
+            "%s: %s" % (serial, type(ex).__name__, ex)
+        )
+
     # Reset battery-service mocking so the Java BatteryManager API keeps
     # receiving fresh PMIC updates during the run.
     #
