@@ -143,7 +143,7 @@ def normalize_current_now_api(device, raw_value):
 
 CAPABILITY_CACHE_DIRNAME = ".device_state_capabilities"
 
-DEFAULT_BRIGHTNESS_VALUE = 128  # mid-range (0..255)
+DEFAULT_BRIGHTNESS_VALUE = 255  # 2026-07-27: bumped 128→255 (user override). Adds ~5-10% to per-cell energy but matched-pair ΔE preserved.
 DEFAULT_BRIGHTNESS_MODE = 0  # 0 = manual, 1 = adaptive
 
 STRICT_ENV_VAR = "MASTEREXP_STRICT_DISCHARGE_CHECK"
