@@ -1,4 +1,5 @@
 import csv
+import logging
 import os
 import os.path as op
 import threading
@@ -175,6 +176,11 @@ class Android(Profiler):
                 run_total = reduce(add_row, reader, init)
                 runs.append(
                     {k: v / run_total['count'] for k, v in list(run_total.items()) if k != 'count'})
+        if not runs:
+            logging.warning(
+                "aggregate_android_subject: no per-run rows found in %s; returning empty aggregate",
+                logs_dir)
+            return OrderedDict()
         runs_total = reduce(
             lambda x, y: {k: v + y[k] for k, v in list(x.items())}, runs)
         return OrderedDict(
@@ -213,3 +219,6 @@ class Android(Profiler):
                         for f in reader.fieldnames:
                             row_dict.update({f: row[f]})
                     return OrderedDict(row_dict)
+        logging.getLogger(__name__).warning(
+            "Android.aggregate_android_final: no Aggregated.csv in %s; returning empty row", logs_dir)
+        return OrderedDict()
