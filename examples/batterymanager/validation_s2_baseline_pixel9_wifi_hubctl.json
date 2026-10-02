@@ -13,8 +13,8 @@
   "application_id": "e.www.baseline",
   "duration": 60000,
   "usb_handler": {
-    "enable_command": "sudo -n /usr/sbin/uhubctl -l 3-6.1 -p 2 -a 1",
-    "disable_command": "sudo -n /usr/sbin/uhubctl -l 3-6.1 -p 2 -a 0"
+    "enable_command": "sudo -n /usr/sbin/uhubctl -l 3-6.1 -p 1 -a 1",
+    "disable_command": "sudo -n /usr/sbin/uhubctl -l 3-6.1 -p 1 -a 0"
   },
   "profilers": {
     "batterymanager": {
