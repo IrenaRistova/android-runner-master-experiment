@@ -200,6 +200,27 @@ def apply_device_state(device) -> Dict[str, Any]:
             "%s: %s" % (serial, type(ex).__name__, ex)
         )
 
+    # 2026-07-29: also SET AppiumIME as the default. On Pixel 3 (Android 12)
+    # the default was still GBoard (LatinIME), which pops the on-screen
+    # keyboard whenever a text field gains focus — the poetskingdom title
+    # dialog then shifts up and the "Confirm" button lands where our tap
+    # coordinates cached from the pre-shift bounds no longer hit it, causing
+    # a 100% S3→S4→S7 cascade fail. Setting AppiumIME as default matches
+    # P6/P9 (already had it) — Appium's IME injects text silently without
+    # showing an on-screen keyboard, so the dialog never shifts.
+    try:
+        device.shell("ime set io.appium.settings/.AppiumIME")
+        _log_stdout(
+            "before_experiment_apply_device_state: AppiumIME set as default on %s "
+            "(silent-typing; prevents Compose dialogs shifting under a soft keyboard)" % serial
+        )
+    except Exception as ex:
+        _log_stderr(
+            "before_experiment_apply_device_state: `ime set AppiumIME` raised on %s "
+            "(continuing — Pixel 3 dialogs may shift and Confirm tap may miss): "
+            "%s: %s" % (serial, type(ex).__name__, ex)
+        )
+
     # Reset battery-service mocking so the Java BatteryManager API keeps
     # receiving fresh PMIC updates during the run.
     #
@@ -267,6 +288,95 @@ def apply_device_state(device) -> Dict[str, Any]:
 
     verdict = snapshot.get("discharge_verdict") or "unknown"
     current_raw = snapshot.get("current_now_raw")
+
+    # 2026-07-29: RETRY on suspected_supplying, with hub-recut between attempts.
+    # The Plugable USB3-HUB7BC-EU exhibits intermittent BC 1.2 backfeed on a
+    # seconds-timescale (root-cause audit in docs/PARALLEL_SWEEP_ISSUES.md).
+    # If the hub port has been re-powered by a parallel-stream race or a
+    # charging-IC re-arm, another `uhubctl -a 0` should re-cut it. Sequence:
+    #   read → positive → re-cut hub → wait → read → positive → re-cut → …
+    # If ANY read is negative, we accept the cell. If ALL N reads are positive
+    # after N re-cuts, the leak is persistent → the workload will be
+    # contaminated → abort fast (RuntimeError).
+    if verdict == "suspected_supplying":
+        import time as _time
+        import os as _os
+        import subprocess as _sp
+        MAX_RETRIES = 3
+        WAIT_S = 5.0
+        # 2026-08-04: MASTEREXP_RECUT_CMD takes priority over MASTEREXP_HUB/PORT.
+        # The hub/port pair is uhubctl-specific and uhubctl does NOT cut VBUS on
+        # the YKUSH3 — it drives the board's internal USB2744 hub while the real
+        # switch is an MCU-driven MOSFET reached only through ykushcmd. Issuing
+        # the uhubctl re-cut on this hardware would report success, change
+        # nothing, and let the retry loop conclude the leak was transient.
+        # sweep_runner_parallel_ykush.sh sets MASTEREXP_RECUT_CMD instead and
+        # leaves MASTEREXP_HUB/PORT unset; the uhubctl runner is unaffected.
+        recut_cmd_env = _os.environ.get("MASTEREXP_RECUT_CMD", "").strip()
+        hub_env = _os.environ.get("MASTEREXP_HUB", "")
+        port_env = _os.environ.get("MASTEREXP_PORT", "")
+        if recut_cmd_env:
+            recut_argv = recut_cmd_env.split()
+            recut_desc = recut_cmd_env
+        elif hub_env and port_env:
+            recut_argv = ["sudo", "-n", "/usr/sbin/uhubctl",
+                          "-l", hub_env, "-p", port_env, "-a", "0"]
+            recut_desc = "uhubctl hub %s port %s" % (hub_env, port_env)
+        else:
+            recut_argv = None
+            recut_desc = ""
+        can_recut = recut_argv is not None
+        all_readings = [current_raw]
+        for attempt in range(1, MAX_RETRIES):
+            if can_recut:
+                _log_stderr(
+                    "before_experiment_apply_device_state: suspected_supplying "
+                    "(current_now=%s) on %s — re-cutting via %s + "
+                    "retry %d/%d after %.1fs"
+                    % (all_readings[-1], serial, recut_desc,
+                       attempt, MAX_RETRIES - 1, WAIT_S)
+                )
+                try:
+                    _sp.run(
+                        recut_argv,
+                        stdout=_sp.DEVNULL, stderr=_sp.DEVNULL, timeout=6,
+                    )
+                except Exception as _ex:
+                    _log_stderr(
+                        "  re-cut failed (continuing without): %s: %s"
+                        % (type(_ex).__name__, _ex)
+                    )
+            else:
+                _log_stderr(
+                    "before_experiment_apply_device_state: suspected_supplying "
+                    "(current_now=%s) on %s — neither MASTEREXP_RECUT_CMD nor "
+                    "MASTEREXP_HUB/PORT set, cannot re-cut. Just retrying after %.1fs (%d/%d)"
+                    % (all_readings[-1], serial, WAIT_S,
+                       attempt, MAX_RETRIES - 1)
+                )
+            _time.sleep(WAIT_S)
+            retry_snap = ds.verify_discharging(device, settle_s=0.0)
+            all_readings.append(retry_snap.get("current_now_raw"))
+            if retry_snap.get("verdict") == "verified_discharge":
+                _log_stdout(
+                    "before_experiment_apply_device_state: discharge verified on "
+                    "%s on retry %d (current_now=%s; readings=%s) — proceeding"
+                    % (serial, attempt, all_readings[-1], all_readings)
+                )
+                verdict = "verified_discharge"
+                current_raw = all_readings[-1]
+                snapshot["discharge_verdict"] = verdict
+                snapshot["current_now_raw"] = current_raw
+                snapshot["retry_all_readings"] = all_readings
+                break
+        else:
+            snapshot["retry_all_readings"] = all_readings
+            _log_stderr(
+                "before_experiment_apply_device_state: %d/%d discharge attempts "
+                "all suspected_supplying on %s (readings=%s) — hub leak confirmed"
+                % (MAX_RETRIES, MAX_RETRIES, serial, all_readings)
+            )
+
     if verdict == "verified_discharge":
         _log_stdout(
             "before_experiment_apply_device_state: discharge verified on %s "
@@ -300,7 +410,25 @@ def apply_device_state(device) -> Dict[str, Any]:
                 "MASTEREXP_STRICT_DISCHARGE_CHECK",
             )
         )
-        sys.exit(1)
+        # 2026-07-29: previously called sys.exit(1). AR's Script.mp_run wraps
+        # execute_script in `try/except Exception:` — SystemExit inherits from
+        # BaseException NOT Exception, so the child process died silently
+        # without queue.put(...); the parent's queue.get() then blocked
+        # forever until the outer sweep_runner watchdog fired at 480 s. Every
+        # abort therefore cost ~9 min of wall time. Raising a plain Exception
+        # is caught by AR, propagated as ScriptError, triggers cleanup +
+        # non-zero rc — sweep_runner sees the fast exit and moves on within
+        # seconds. See 2026-07-29 sweep-code audit for details.
+        raise RuntimeError(
+            "STRICT MODE ABORT on %s: discharge_verdict=%s current_now_raw=%s "
+            "(sentinel=%s). Hub is leaking; cell skipped."
+            % (
+                serial,
+                verdict,
+                snapshot.get("current_now_raw"),
+                sentinel_path or "<not written>",
+            )
+        )
 
     return snapshot
 

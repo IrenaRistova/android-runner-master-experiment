@@ -66,6 +66,32 @@ def main(device, *args, **kwargs):
             pass
 
     try:
+        import before_experiment_disable_radios_and_savers as _radios
+        _radios.disable_radios_and_savers(device)
+    except SystemExit:
+        raise
+    except Exception as exc:
+        try:
+            sys.stderr.write(
+                "before_experiment_uninstall: disable_radios_and_savers chain "
+                "failed (continuing): {}: {}\n".format(type(exc).__name__, exc)
+            )
+        except Exception:
+            pass
+
+    try:
+        import before_experiment_sync_fixtures as _fixtures
+        _fixtures.sync_fixtures(device)
+    except Exception as exc:
+        try:
+            sys.stderr.write(
+                "before_experiment_uninstall: sync_fixtures chain failed "
+                "(continuing): {}: {}\n".format(type(exc).__name__, exc)
+            )
+        except Exception:
+            pass
+
+    try:
         if PACKAGE in device.get_app_list():
             device.logger.info("Uninstalling %s so the next run installs fresh.", PACKAGE)
             device.uninstall(PACKAGE)
