@@ -115,3 +115,8 @@ output/
 
 # Per-machine device-state capability cache (E0.T8) — keyed by adb serial
 examples/batterymanager/Scripts/.device_state_capabilities/
+
+# Backups written by hand-edits and migration scripts -- never commit
+*.bak
+*.bak.*
+*_bak
