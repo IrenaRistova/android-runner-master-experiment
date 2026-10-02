@@ -1,5 +1,5 @@
 {
-  "_comment": "S2 Baseline on Pixel 3 over WiFi-ADB with auto hub-ctrl. Pixel 3 is on inner hub 5-1.3.2.1 port 1 (post-2026-06-02 topology). First Pixel 3 measurement of this thesis. Run: cd android-runner && source .venv/bin/activate && python3 . examples/batterymanager/validation_s2_baseline_pixel3_wifi_hubctl.json",
+  "_comment": "[BASELINE-DEBUG variant, generated 2026-07-24, points to baseline_debug_canonical folder]",
   "type": "native",
   "adb_path": "/home/irena/Android/Sdk/platform-tools/adb",
   "devices": {
@@ -8,14 +8,10 @@
   "repetitions": 1,
   "interaction_covers_duration": true,
   "paths": [
-    "/home/irena/Documents/Master Experiment/_external/android-apps-benchmark/APKs/Baseline/e.www.baseline.apk"
+    "/home/irena/Documents/Master Thesis/APKs/allatori_debug_canonical/documenter_allatori_debug.signed.apk"
   ],
-  "application_id": "e.www.baseline",
-  "duration": 60000,
-  "usb_handler": {
-    "enable_command": "sudo -n /usr/sbin/uhubctl -l 3-6.1 -p 4 -a 1",
-    "disable_command": "sudo -n /usr/sbin/uhubctl -l 3-6.1 -p 4 -a 0"
-  },
+  "application_id": "com.viliussutkus89.documenter.debug",
+  "duration": 120000,
   "profilers": {
     "batterymanager": {
       "experiment_aggregation": "default",
@@ -34,6 +30,7 @@
       ]
     },
     "android": {
+      "_comment": "E1.5.T1+T2 CPU + memory polling",
       "sample_interval": 1000,
       "data_points": [
         "cpu",
@@ -50,13 +47,17 @@
     }
   },
   "scripts": {
-    "before_experiment": "Scripts/before_experiment_uninstall_s2_baseline.py",
+    "before_experiment": "Scripts/before_experiment_uninstall_documenter.py",
     "before_run": "Scripts/before_run.py",
     "after_launch": "Scripts/after_launch.py",
-    "interaction": "Scripts/interaction_s2_baseline.py",
+    "interaction": "Scripts/interaction_appium_documenter.py",
     "before_close": "Scripts/before_close.py",
     "after_run": "Scripts/after_run.py",
     "after_experiment": "Scripts/after_experiment.py"
   },
-  "time_between_run": 5000
+  "time_between_run": 5000,
+  "usb_handler": {
+    "enable_command": "sudo -n /usr/sbin/uhubctl -l 3-6.1 -p 4 -a 1",
+    "disable_command": "sudo -n /usr/sbin/uhubctl -l 3-6.1 -p 4 -a 0"
+  }
 }
